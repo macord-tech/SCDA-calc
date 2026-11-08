@@ -1,0 +1,744 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SCDA Calc</title>
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SCDA Calc">
+<style>
+  /* Layout: a conditions panel beside an editable altitude table; one column on phones.
+     Look: neutral grey instrument panel with a faint blue cast and one muted steel accent. Figures in mono. */
+  :root {
+    --paper: #D9DBDE;
+    --surface: #F7F8F9;
+    --field: #ECEEF0;
+    --ink: #14100D;
+    --muted: #585D63;
+    --rule: #BFC3C8;
+    --accent: #B5351C;
+    --accent-bg: #E3E5E8;
+    --accent-ink: #FFFFFF;
+    --warn: #B3261A;
+    --warn-bg: #ECE9E8;
+    --crit: #B3261A;
+    --label: #D2601A;
+    --terrain: #D3D6DA;
+    --terrain-line: #8A9097;
+    --block: #C6C6C6;
+    --f-display: 'Barlow Condensed', 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif;
+    --f-body: 'Barlow', -apple-system, 'Helvetica Neue', Arial, sans-serif;
+    --f-data: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #1A0F0D;
+      --surface: #2A1A17;
+      --field: #1E1210;
+      --ink: #F7E5E0;
+      --muted: #C4A39B;
+      --rule: #4D2F2A;
+      --accent: #F2765F;
+      --accent-bg: #412320;
+      --accent-ink: #1E1210;
+      --warn: #FF8F7D;
+      --warn-bg: #3A211B;
+      --crit: #FF8F7D;
+      --label: #F29A4B;
+      --terrain: #3A231F;
+      --terrain-line: #9C5046;
+      --block: #5A5048;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #1A0F0D;
+    --surface: #2A1A17;
+    --field: #1E1210;
+    --ink: #F7E5E0;
+    --muted: #C4A39B;
+    --rule: #4D2F2A;
+    --accent: #F2765F;
+    --accent-bg: #412320;
+    --accent-ink: #1E1210;
+    --warn: #FF8F7D;
+    --warn-bg: #3A211B;
+    --crit: #FF8F7D;
+    --label: #F29A4B;
+    --terrain: #3A231F;
+    --terrain-line: #9C5046;
+    --block: #5A5048;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--f-body);
+    font-size: 16px;
+    line-height: 1.45;
+    padding-block: 22px 44px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: 20px; }
+
+  header { display: grid; gap: 6px; }
+  .eyebrow {
+    font-family: var(--f-display); font-weight: 500; font-size: 15px;
+    text-transform: uppercase; letter-spacing: .16em; color: var(--accent);
+  }
+  h1 {
+    font-family: var(--f-display); font-weight: 600; margin: 0;
+    font-size: clamp(32px, 5.4vw, 48px); line-height: 1.02; letter-spacing: .005em; text-wrap: balance;
+  }
+  .lede { margin: 0; max-width: 62ch; color: var(--muted); }
+
+  .grid { display: grid; grid-template-columns: minmax(0, 350px) minmax(0, 1fr); gap: 20px; align-items: start; }
+  @media (max-width: 860px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+
+  .panel { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 18px; min-width: 0; }
+  .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  h2 {
+    font-family: var(--f-display); font-weight: 600; font-size: 22px; margin: 0;
+    text-transform: uppercase; letter-spacing: .06em;
+  }
+  .tag {
+    font-family: var(--f-display); font-weight: 500; font-size: 14px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--accent); background: var(--accent-bg); padding: 3px 10px; border-radius: 3px;
+  }
+
+  .field { display: grid; gap: 6px; margin-bottom: 16px; min-width: 0; }
+  .lbl {
+    font-family: var(--f-display); font-weight: 500; font-size: 15px;
+    letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
+  }
+  .inwrap { display: flex; align-items: stretch; gap: 8px; min-width: 0; }
+  .numin, .cell-in {
+    min-width: 0; height: 48px; border: 1px solid var(--rule); border-radius: 4px;
+    background: var(--field); color: var(--ink); padding: 0 12px;
+    font-family: var(--f-data); font-weight: 500; font-size: 20px; font-variant-numeric: tabular-nums;
+  }
+  .numin { flex: 1; }
+  .unit { display: flex; align-items: center; min-width: 30px; color: var(--muted); font-family: var(--f-data); font-size: 16px; }
+  input::placeholder { color: var(--muted); opacity: .8; font-family: var(--f-body); font-size: 16px; }
+
+  .seg { display: flex; border: 1px solid var(--rule); border-radius: 5px; overflow: hidden; background: var(--field); }
+  .seg button {
+    flex: 1; min-height: 46px; padding: 0 12px; border: 0; background: transparent; color: var(--ink);
+    font-family: var(--f-body); font-weight: 600; font-size: 16px; cursor: pointer;
+  }
+  .seg button + button { border-left: 1px solid var(--rule); }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+
+  .sign {
+    width: 56px; border: 1px solid var(--rule); border-radius: 4px; background: var(--surface); color: var(--ink);
+    font-family: var(--f-data); font-weight: 600; font-size: 22px; cursor: pointer;
+  }
+
+  button:focus-visible, input:focus-visible, summary:focus-visible {
+    outline: 3px solid var(--accent); outline-offset: 2px;
+  }
+
+  .readout {
+    margin: 0 0 16px; padding: 12px; border: 1px dashed var(--rule); border-radius: 4px;
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px;
+  }
+  .readout div { min-width: 0; }
+  .readout dt { font-family: var(--f-display); font-weight: 500; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .readout dd { margin: 2px 0 0; font-family: var(--f-data); font-weight: 600; font-size: 17px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+
+  details { border-top: 1px solid var(--rule); padding-top: 4px; }
+  summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 600; }
+  details .field { margin: 6px 0 0; }
+
+  .status { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 14px 0; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: 999px;
+    font-weight: 600; font-size: 15px; background: var(--field); color: var(--ink); border: 1px solid var(--rule);
+  }
+  .pill::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
+  .pill.on { background: var(--accent-bg); color: var(--accent); border-color: transparent; }
+  .pill.on::before { background: var(--accent); }
+  .pill.off { background: var(--field); color: var(--ink); }
+
+  .tablewrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 680px; }
+  th {
+    font-family: var(--f-display); font-weight: 500; font-size: 14px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--muted); text-align: left; padding: 8px; border-bottom: 2px solid var(--ink); white-space: nowrap;
+  }
+  th.num, td.num { text-align: right; }
+  td { padding: 8px; border-bottom: 1px solid var(--rule); vertical-align: middle; }
+  .cell-in { width: 100%; height: 46px; font-size: 18px; }
+  .cell-in.name { font-family: var(--f-body); font-weight: 500; }
+  .cell-in.alt { text-align: right; }
+  .corr { font-family: var(--f-data); font-weight: 500; font-size: 18px; color: var(--accent); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .final { font-family: var(--f-data); font-weight: 600; font-size: 26px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .other { font-family: var(--f-data); font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .del {
+    width: 44px; height: 44px; border: 1px solid transparent; border-radius: 4px; background: transparent;
+    color: var(--muted); font-size: 22px; cursor: pointer;
+  }
+  .del:hover { color: var(--crit); border-color: var(--rule); }
+
+  .add {
+    margin-top: 14px; min-height: 46px; padding: 0 18px; border: 1px solid var(--accent); border-radius: 4px;
+    background: transparent; color: var(--accent); font-family: var(--f-body); font-weight: 600; font-size: 16px; cursor: pointer;
+  }
+  .empty { padding: 18px 8px; color: var(--muted); }
+
+  .warn { display: grid; gap: 8px; margin-top: 14px; }
+  .warn p { margin: 0; padding: 10px 12px; border-radius: 4px; background: var(--warn-bg); color: var(--warn); font-weight: 500; }
+
+  .notes { margin: 18px 0 0; padding: 14px 0 0; border-top: 1px solid var(--rule); display: grid; gap: 8px; color: var(--muted); font-size: 15px; max-width: 70ch; list-style: none; }
+  .foot { color: var(--muted); font-size: 14px; max-width: 80ch; margin: 0; }
+
+  .seg button { line-height: 1.15; padding: 6px 8px; }
+  table { min-width: 640px; }
+  th.mid, td.mid { text-align: center; }
+  .chk { width: 26px; height: 26px; accent-color: var(--accent); }
+  .cell-in.name { min-width: 150px; }
+  .other { display: block; margin-top: 2px; font-size: 12px; }
+  .other .ol { display: block; }
+  details.notes-box { margin-top: 18px; border-top: 1px solid var(--rule); padding-top: 12px; }
+  details.notes-box summary { cursor: pointer; font-family: var(--f-display); font-weight: 500; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding: 6px 0; list-style: none; }
+  details.notes-box summary::-webkit-details-marker { display: none; }
+  details.notes-box summary::after { content: "  +"; }
+  details.notes-box[open] summary::after { content: "  −"; }
+  details.notes-box .notes { margin-top: 8px; border-top: 0; padding-top: 0; }
+  @media (max-width: 640px) {
+    table { min-width: 0; }
+    thead { display: none; }
+    table, tbody, tr, td { display: block; }
+    tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; padding: 14px 0; border-bottom: 1px solid var(--rule); }
+    td, td.num, td.mid { border: 0; padding: 0; min-width: 0; text-align: left; }
+    td::before { content: attr(data-label); display: block; margin-bottom: 4px; font-family: var(--f-display); font-weight: 500; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+    td.name-cell, td.del-cell { grid-column: 1 / -1; }
+    td.del-cell::before { content: none; }
+    .cell-in.alt { text-align: left; }
+    .cell-in.name { min-width: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+  .readout.four dd { font-size: 22px; }
+  .readout.four small { font-family: var(--f-body); font-weight: 500; font-size: 13px; color: var(--muted); }
+  .cell-in.alt.dis { opacity: .65; }
+  .corr.neg, .final.neg { color: var(--crit); }
+  td.fixed-row .nm { font-weight: 600; }
+  .sub { font-family: var(--f-data); font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .path { font-family: var(--f-data); font-weight: 600; font-size: 20px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .grid { grid-template-columns: minmax(0, 1fr); }
+  .fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 0 20px; }
+  .fields details { grid-column: 1 / -1; }
+  .fields .field { margin-bottom: 14px; align-content: start; }
+  .tablewrap th { padding: 8px 4px; letter-spacing: .03em; font-size: 12px; white-space: normal; vertical-align: bottom; line-height: 1.1; }
+  .tablewrap .del { width: 34px; }
+  .tablewrap td { padding: 8px 4px; }
+  .tablewrap .cell-in { padding: 0 8px; }
+  .tablewrap .cell-in { font-size: 17px; height: 44px; }
+  .tablewrap .cell-in.name { min-width: 84px; }
+  .tablewrap .cell-in.alt { min-width: 62px; }
+  .tablewrap .path { font-size: 18px; }
+  .tablewrap td .path[data-out="aim"] { font-weight: 500; }
+  .h-rate { margin: 22px 0 10px; }
+  .rates { display: grid; grid-template-columns: repeat(auto-fit, minmax(104px, 1fr)); gap: 8px; }
+  .rate { display: grid; gap: 2px; padding: 8px 10px; border: 1px solid var(--rule); border-radius: 4px; background: var(--field); }
+  .rate .gs { font-family: var(--f-display); font-weight: 500; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .rate .fpm { font-family: var(--f-data); font-weight: 600; font-size: 20px; font-variant-numeric: tabular-nums; }
+  tr.lim .corr { color: var(--accent); font-weight: 600; }
+  @media (min-width: 641px) {
+    .tablewrap td { padding-top: 16px; padding-bottom: 16px; border-bottom: 3px solid var(--ink); }
+    .tablewrap th.num { padding-right: 13px; }
+    .tablewrap td.num > span { display: block; padding-right: 9px; }
+  }
+  .readout.four { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px 40px; align-items: start; margin-bottom: 14px; }
+  .readout.four > div { position: relative; }
+  .readout.four dt { min-height: 2.4em; }
+  .readout.four .to::after { content: "→"; position: absolute; right: -20px; bottom: 0; transform: translateX(50%); font-family: var(--f-data); font-size: 26px; font-weight: 700; line-height: 32px; color: var(--accent); }
+  @media (max-width: 640px) { .readout.four { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 640px) { #rows tr { border-bottom: 3px solid var(--ink); padding: 16px 0; } }
+  .tablewrap .del { width: auto; max-width: 150px; height: 36px; padding: 0 14px; border: 1px solid var(--rule); border-radius: 999px; background: var(--field); color: var(--ink); font-family: var(--f-body); font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tablewrap .del:hover { color: var(--crit); border-color: var(--crit); }
+  .tablewrap .del:disabled { opacity: .4; cursor: default; }
+  .diagram { margin: 0 0 16px; border: 1px solid var(--rule); border-radius: 4px; background: var(--field); padding: 6px 6px 2px; }
+  .diagram svg { display: block; width: 100%; height: auto; }
+  .diagram text { font-family: var(--f-data); fill: var(--ink); }
+  .diagram .t-lab { fill: var(--label); font-weight: 700; font-size: 16px; }
+  .diagram .t-name { font-family: var(--f-body); font-weight: 600; font-size: 15px; }
+  .diagram .t-axis { fill: var(--muted); font-size: 13px; }
+  .diagram .t-cross { fill: var(--crit); font-weight: 700; font-size: 16px; }
+  .diagram .t-ang { font-weight: 700; font-size: 18px; }
+  .diagram .t-dim { fill: var(--muted); font-size: 14px; }
+  .diagram .ground { fill: var(--terrain); stroke: none; }
+  .diagram .gline { stroke: var(--terrain-line); stroke-width: 1.5; }
+  .diagram .grid { stroke: var(--rule); stroke-width: 1; }
+  .diagram .drop { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 4; }
+  .diagram .block { stroke: var(--block); stroke-width: 7; stroke-linecap: butt; }
+  .diagram .path { stroke: var(--ink); stroke-width: 3; fill: none; }
+  .diagram .pt { fill: var(--surface); stroke: var(--ink); stroke-width: 2; }
+  .diagram .mdaline { stroke: var(--crit); stroke-width: 2; stroke-dasharray: 7 5; }
+  .diagram .t-mda { fill: var(--crit); font-weight: 700; font-size: 15px; }
+  .diagram .dim { stroke: var(--muted); stroke-width: 1; }
+  .diagram .rwy { fill: var(--ink); }
+  .fields .field.wide { grid-column: 1 / -1; }
+  .numin.name-in { font-family: var(--f-body); font-weight: 500; flex: none; width: 100%; }
+  .export { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--rule); }
+  .export .add { margin-top: 0; }
+  .add:disabled { opacity: .45; cursor: default; }
+  .export-text { width: 100%; min-height: 220px; margin-top: 12px; padding: 10px; border: 1px solid var(--rule); border-radius: 4px; background: var(--field); color: var(--ink); font-family: var(--f-data); font-size: 13px; }
+  /* standalone page reset */
+  :root { color-scheme: light; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  body { margin: 0; }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+
+  @media print {
+    :root, :root:not([data-theme="light"]), :root[data-theme="dark"], :root[data-theme="light"] { color-scheme: light; --paper:#fff; --surface:#fff; --field:#fff; --ink:#000; --muted:#444; --rule:#999; --line:#000; --accent:#000; --accent-bg:#e6e6e6; --crit:#000; --warn:#000; --label:#333; --terrain:#ddd; --terrain-line:#777; --block:#999; }
+    html { filter: grayscale(1); }
+    body { background: #fff !important; color: #000; }
+    .export, .export-text, .add, .del, details, #apprTag { display: none !important; }
+    .panel, section { box-shadow: none !important; break-inside: avoid; }
+    input { border-color: #999 !important; background: #fff !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>SCDA Calc</h1>
+  </header>
+
+  <div class="grid">
+    <section class="panel" aria-label="Approach">
+      <div class="fields">
+        <div class="field wide">
+          <label class="lbl" for="appr">Approach name</label>
+          <input class="numin name-in" id="appr" autocomplete="off" placeholder="e.g. CYKA LOC Z RWY 27">
+        </div>
+        <div class="field">
+          <label class="lbl" for="thrElev">Threshold elevation</label>
+          <div class="inwrap">
+            <input class="numin" id="thrElev" inputmode="decimal" autocomplete="off" placeholder="e.g. 1133">
+            <span class="unit">ft</span>
+          </div>
+        </div>
+        <div class="field">
+          <label class="lbl" for="mda">MDA</label>
+          <div class="inwrap">
+            <input class="numin" id="mda" inputmode="decimal" autocomplete="off" placeholder="e.g. 1500">
+            <span class="unit">ft</span>
+          </div>
+        </div>
+        <div class="field">
+          <label class="lbl" for="tod">TOD</label>
+          <div class="inwrap">
+            <input class="numin" id="tod" inputmode="decimal" autocomplete="off" placeholder="optional">
+            <span class="unit">ft</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="h-prof">
+      <div class="panel-head"><h2 id="h-prof">SCDA Profile</h2><span class="tag" id="apprTag" hidden></span></div>
+
+      <dl class="readout four">
+        <div><dt>Descent angle</dt><dd id="r-ang">—</dd></div>
+        <div><dt>MDA crossing</dt><dd id="r-mda">—</dd></div>
+        <div><dt>Descent ratio</dt><dd id="r-ratio">—</dd></div>
+        <div><dt>Gradient</dt><dd id="r-grad">—</dd></div>
+        <div class="to"><dt>Top of descent</dt><dd id="r-tod">—</dd></div>
+        <div><dt id="r-backlbl">Back from nearest fix</dt><dd id="r-back">—</dd></div>
+      </dl>
+
+      <div class="diagram" id="diagram" hidden></div>
+
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Fix</th>
+              <th class="num">Altitude ft</th>
+              <th class="num">From prev. NM</th>
+              <th class="num">Req: ft/NM</th>
+              <th class="num">Cross Over Hgt</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+
+      <button type="button" class="add" id="addRow">Add fix</button>
+
+      <div class="warn" id="warn" aria-live="polite"></div>
+
+      <h2 class="h-rate">Rate of descent, ft/min</h2>
+      <div class="rates" id="rates"></div>
+
+      <details class="notes-box"><summary>Notes</summary>
+      <ul class="notes">
+        <li>Start at the runway and work outward. List each fix with the altitude to be at or above and the distance from the previous one. The first fix is measured from the runway threshold, where the path is 50 ft above the threshold elevation (AC 700-028).</li>
+        <li>The angle is constant from 50 ft over the threshold outward. Each fix is a segment: "Req:" is its altitude minus the altitude of the fix before it (50 ft over the threshold for the first fix), divided by the distance between them. The steepest segment sets the angle for the whole approach, from the threshold out to the top of descent. Because that gradient is at least as steep as every other segment, the path is at or above every fix altitude.</li>
+        <li>Cross Over Hgt is the altitude on the line at each fix, and it is also shown in red on the diagram. The figure shown includes a 100 ft buffer, so the pilot aims to cross each fix no lower than 100 ft above its altitude. The buffer is not part of the calculation: the angle, gradient, rates, MDA crossing and top of descent use the plain fix altitudes. The top of descent altitude is optional. If you enter it, the tool shows how far out it is, and a fix farther out than that shows the top of descent altitude.</li>
+        <li>"MDA crossing" is how far from the runway threshold the path is at the MDA altitude you enter. Descent ratio is the gradient divided by 60. Multiply it by the ground speed in knots to get the rate of descent in ft/min (the gradient times the ground speed in NM per minute, AC 700-028 §5.3). "Back from nearest fix" is how far before the nearest fix inbound of the top of descent the descent starts.</li>
+      </ul>
+      </details>
+
+      <div class="export">
+        <button type="button" class="add" id="exportBtn" disabled>Export TXT</button>
+        <button type="button" class="add" id="emailBtn" disabled>Email</button>
+        <button type="button" class="add" id="printBtn" disabled>Print</button>
+        <span class="sub" id="exportMsg" aria-live="polite"></span>
+      </div>
+      <textarea class="export-text" id="exportText" readonly hidden aria-label="Exported text"></textarea>
+    </section>
+  </div>
+
+  <p class="foot">Planning aid built from Transport Canada AC 700-028 Issue 01, Vertical Path Control on Non-Precision Approaches. For operations, use the approach chart and the published descent angle.</p>
+</div>
+<script>
+const KEY = 'descentProfile.v3';
+const MINUS = '−';
+const TCH = 50;   // threshold crossing height, ft (AC 700-028)
+const BUFFER = 100;   // pilot buffer shown on the path figures, ft (not used in the calculation)
+const CROSS = 0;   // extra height the path must have over each fix altitude, ft (none)
+let state = { appr: '', thrElev: '', mda: '', tod: '', rows: [{ n: '', a: '', d: '' }, { n: '', a: '', d: '' }] };
+try {
+  const s = JSON.parse(localStorage.getItem(KEY));
+  if (s && Array.isArray(s.rows) && s.rows.length) state = Object.assign(state, s);
+} catch (e) {}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+const $ = id => document.getElementById(id);
+const num = s => {
+  const t = String(s == null ? '' : s).trim().replace(',', '.').replace(MINUS, '-');
+  if (t === '' || t === '-' || t === '.') return NaN;
+  const v = Number(t);
+  return Number.isFinite(v) ? v : NaN;
+};
+const nf = new Intl.NumberFormat('en-CA', { maximumFractionDigits: 0 });
+const fmtInt = n => nf.format(Math.round(n) + 0).replace('-', MINUS).replace(/ /g, ' ');
+const fmtDec = (n, d) => (n < 0 ? MINUS : '') + Math.abs(n).toFixed(d);
+const fmtDist = n => (Math.round(n * 10) / 10).toString();
+const fmtSigned = n => n > 0 ? '+' + fmtInt(n) : fmtInt(n);
+
+// ---- calc:start
+// rows: [{a, d}] working outward from the runway (d = NM from the row above; the first row is measured from the threshold).
+// thrElev, tch in ft; tod = top of descent altitude (NaN if none).
+function profile(rows, thrElev, tch, tod, cross) {
+  cross = cross || 0;
+  const n = rows.length;
+  if (n < 1 || !Number.isFinite(thrElev) || !Number.isFinite(tch)) return null;
+  const toThr = new Array(n);
+  let acc = 0;
+  for (let i = 0; i < n; i++) {
+    if (!Number.isFinite(rows[i].d) || rows[i].d < 0) return null;
+    acc += rows[i].d;
+    toThr[i] = acc;
+  }
+  const end = thrElev + tch;
+  // gradient of each segment: the climb from the previous fix (or the threshold crossing point) to this fix, over the distance between them
+  const need = rows.map(() => NaN);
+  let pa = end, pd = 0;
+  rows.forEach((r, i) => {
+    if (!Number.isFinite(r.a)) return;
+    if (toThr[i] > pd) need[i] = (r.a + cross - pa) / (toThr[i] - pd);
+    pa = r.a + cross; pd = toThr[i];
+  });
+  let lim = -1, grad = -Infinity;
+  need.forEach((g, i) => { if (Number.isFinite(g) && g > grad) { grad = g; lim = i; } });
+  if (lim < 0) return null;
+  // safety: the path must be at or above the altitude of every fix, whatever the order or spacing entered
+  rows.forEach((r, i) => { if (Number.isFinite(r.a) && toThr[i] > 0) grad = Math.max(grad, (r.a + cross - end) / toThr[i]); });
+  if (!(grad > 0)) return { bad: true, end: end };
+  const angle = Math.atan(grad / 6076.12) * 180 / Math.PI;
+  const path = toThr.map(d => end + grad * d);
+  let todDist = NaN;
+  if (Number.isFinite(tod)) {
+    todDist = (tod - end) / grad;
+    for (let i = 0; i < n; i++) if (toThr[i] > todDist) path[i] = tod;
+  }
+  return { toThr: toThr, need: need, grad: grad, angle: angle, lim: lim, path: path, end: end, todDist: todDist };
+}
+const rateFpm = (grad, gsKt) => grad * gsKt / 60;
+// ---- calc:end
+
+const rowsEl = $('rows');
+let trs = [];
+
+function buildRows() {
+  rowsEl.innerHTML = '';
+  trs = [];
+  state.rows.forEach((r, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td class="name-cell" data-label="Fix"><input class="cell-in name" data-f="n" autocomplete="off" placeholder="Fix" aria-label="Fix name"></td>' +
+      '<td class="num" data-label="Altitude ft"><input class="cell-in alt" data-f="a" inputmode="decimal" autocomplete="off" placeholder="0" aria-label="Altitude at the fix, feet"></td>' +
+      '<td class="num" data-label="From prev. NM"><input class="cell-in alt" data-f="d" inputmode="decimal" autocomplete="off" placeholder="0.0" aria-label="Distance from the previous fix, nautical miles; the first fix is measured from the runway threshold"></td>' +
+      '<td class="num" data-label="Req: ft/NM"><span class="sub" data-out="need">—</span></td>' +
+      '<td class="num" data-label="Cross Over Hgt"><span class="path" data-out="path">—</span></td>' +
+      '<td class="del-cell"><button type="button" class="del"' + (state.rows.length <= 1 ? ' disabled' : '') + '></button></td>';
+    tr.querySelector('[data-f="n"]').value = r.n;
+    tr.querySelector('[data-f="a"]').value = r.a;
+    tr.querySelector('[data-f="d"]').value = r.d;
+    const delBtn = tr.querySelector('.del');
+    const delLabel = () => { delBtn.textContent = 'Remove ' + (r.n.trim() || 'fix'); delBtn.setAttribute('aria-label', delBtn.textContent); };
+    delLabel();
+    tr.querySelectorAll('input').forEach(inp => inp.addEventListener('input', () => {
+      r[inp.dataset.f] = inp.value; if (inp.dataset.f === 'n') delLabel(); save(); update();
+    }));
+    tr.querySelector('.del').addEventListener('click', () => {
+      if (state.rows.length <= 1) return;
+      state.rows.splice(i, 1); save(); buildRows(); update();
+    });
+    rowsEl.appendChild(tr); trs.push(tr);
+  });
+}
+
+
+// Side view of the calculated descent: runway on the left, fixes and the path working outward.
+function drawDiagram(res, rows, names, thrElev, mda, tod, disp) {
+  const el = $('diagram');
+  const n = rows.length;
+  const fixes = rows.map((r, i) => ({ d: res.toThr[i], a: r.a, p: res.path[i], name: names[i], disp: disp[i] })).filter(f => Number.isFinite(f.a));
+  if (!fixes.length) { el.hidden = true; return; }
+  const W = 800, H = 360, L = 64, R = 24, T = 36, B = 92;
+  const pw = W - L - R, ph = H - T - B;
+  const pathOuter = Number.isFinite(res.todDist) ? res.todDist : res.toThr[n - 1];
+  const xMax = Math.max(pathOuter, res.toThr[n - 1]) * 1.04 || 1;
+  const ys = [res.end, mda, tod].concat(fixes.map(f => f.a)).concat([res.path[n - 1]]).filter(Number.isFinite);
+  const yLo0 = Math.min(thrElev, ...ys), yHi0 = Math.max(...ys);
+  const span = Math.max(yHi0 - yLo0, 100);
+  const yLo = yLo0 - span * 0.1, yHi = yHi0 + span * 0.14;
+  const X = d => L + (d / xMax) * pw;
+  const Y = a => T + ph - ((a - yLo) / (yHi - yLo)) * ph;
+  const f0 = v => fmtInt(v);
+  let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Side view of the constant descent path from the top of descent to the runway threshold">';
+  s += '<defs><marker id="ah" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L11 6 L1 11 Z" fill="var(--ink)"/></marker></defs>';
+  // ground and altitude grid
+  const gy = Y(thrElev);
+  s += '<rect class="ground" x="' + L + '" y="' + gy + '" width="' + pw + '" height="' + (T + ph - gy) + '"/>';
+  const step = [50, 100, 200, 250, 500, 1000, 2000, 2500, 5000].find(k => span / k <= 6) || 5000;
+  for (let a = Math.ceil(yLo / step) * step; a <= yHi; a += step) {
+    s += '<line class="grid" x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(a) + '" y2="' + Y(a) + '"/>';
+    s += '<text class="t-axis" x="' + (L - 8) + '" y="' + (Y(a) + 4) + '" text-anchor="end">' + f0(a) + '</text>';
+  }
+  s += '<line class="gline" x1="' + L + '" x2="' + (W - R) + '" y1="' + gy + '" y2="' + gy + '"/>';
+  // runway
+  s += '<rect class="rwy" x="' + (L - 2) + '" y="' + (gy - 4) + '" width="26" height="8"/>';
+  s += '<text class="t-name" x="' + (L + 30) + '" y="' + (gy + 16) + '">ELEV ' + f0(thrElev) + '</text>';
+  // MDA
+  if (Number.isFinite(mda) && mda > res.end) {
+    const md = (mda - res.end) / res.grad;
+    s += '<line class="mdaline" x1="' + L + '" x2="' + X(md) + '" y1="' + Y(mda) + '" y2="' + Y(mda) + '"/>';
+    s += '<line class="drop" x1="' + X(md) + '" x2="' + X(md) + '" y1="' + Y(mda) + '" y2="' + gy + '"/>';
+    s += '<circle class="pt" cx="' + X(md) + '" cy="' + Y(mda) + '" r="5" style="stroke:var(--crit)"/>';
+    s += '<text class="t-mda" x="' + (L + 6) + '" y="' + (Y(mda) - 7) + '">MDA ' + f0(mda) + '</text>';
+  }
+  // path, drawn toward the runway
+  const yPathOuter = Number.isFinite(res.todDist) ? tod : res.path[n - 1];
+  s += '<line class="path" x1="' + X(pathOuter) + '" y1="' + Y(yPathOuter) + '" x2="' + (L + 24) + '" y2="' + Y(res.end + res.grad * (24 / pw) * xMax) + '" marker-end="url(#ah)"/>';
+  // fixes
+  fixes.forEach(f => {
+    const x = X(f.d);
+    s += '<line class="drop" x1="' + x + '" x2="' + x + '" y1="' + Math.min(Y(f.a), Y(f.p)) + '" y2="' + (T + ph) + '"/>';
+    s += '<line class="block" x1="' + (x - 15) + '" x2="' + (x + 15) + '" y1="' + Y(f.a) + '" y2="' + Y(f.a) + '"/>';
+    s += '<text class="t-lab" x="' + x + '" y="' + (Y(f.a) + 24) + '" text-anchor="middle">' + f0(f.a) + '</text>';
+    s += '<circle class="pt" cx="' + x + '" cy="' + Y(Math.min(f.p, yPathOuter)) + '" r="4.5"/>';
+    s += '<text class="t-cross" x="' + (x - 9) + '" y="' + (Y(Math.min(f.p, yPathOuter)) - 10) + '" text-anchor="end">' + f0(f.disp) + '</text>';
+    s += '<text class="t-name" x="' + x + '" y="' + (T + ph + 18) + '" text-anchor="middle">' + f.name.replace(/[<>&]/g, '') + '</text>';
+  });
+  // top of descent
+  if (Number.isFinite(res.todDist)) {
+    const x = X(res.todDist), y = Y(tod);
+    s += '<path d="M' + (x - 7) + ' ' + (y - 14) + ' L' + (x + 7) + ' ' + (y - 14) + ' L' + x + ' ' + (y - 2) + ' Z" fill="var(--crit)"/>';
+    s += '<text class="t-mda" x="' + (x + 10) + '" y="' + (y - 36) + '" text-anchor="end">TOD ' + f0(tod) + '</text>';
+    s += '<text class="t-mda" x="' + (x + 10) + '" y="' + (y - 20) + '" text-anchor="end">' + (Number.isFinite(res.backNM) ? fmtDist(res.backNM) + ' NM Back' : fmtDec(res.todDist, 1) + ' NM Back') + '</text>';
+  }
+  // angle label, top left of the diagram
+  s += '<text class="t-axis" x="' + (L + 8) + '" y="18">DESCENT ANGLE</text>';
+  s += '<text class="t-ang" x="' + (L + 8) + '" y="38">' + fmtDec(res.angle, 2) + '°</text>';
+  // distances between points
+  const pts = [0].concat(res.toThr);
+  const dy = T + ph + 46;
+  for (let i = 1; i < pts.length; i++) {
+    const x1 = X(pts[i - 1]), x2 = X(pts[i]);
+    s += '<line class="dim" x1="' + x1 + '" x2="' + x2 + '" y1="' + dy + '" y2="' + dy + '"/>';
+    s += '<line class="dim" x1="' + x1 + '" x2="' + x1 + '" y1="' + (dy - 5) + '" y2="' + (dy + 5) + '"/><line class="dim" x1="' + x2 + '" x2="' + x2 + '" y1="' + (dy - 5) + '" y2="' + (dy + 5) + '"/>';
+    s += '<text class="t-dim" x="' + ((x1 + x2) / 2) + '" y="' + (dy + 18) + '" text-anchor="middle">' + fmtDist(pts[i] - pts[i - 1]) + ' NM</text>';
+  }
+  s += '</svg>';
+  el.innerHTML = s;
+  el.hidden = false;
+}
+
+// ---- export: a plain text report of what is on the screen
+function buildReport() {
+  const n = state.rows.length;
+  const txt = id => $(id).textContent.replace(/\s+/g, ' ').trim();
+  const pad = (s, w) => String(s).padEnd(w);
+  const padL = (s, w) => String(s).padStart(w);
+  const now = new Date();
+  const p2 = v => String(v).padStart(2, '0');
+  const stamp = now.getFullYear() + '-' + p2(now.getMonth() + 1) + '-' + p2(now.getDate()) + ' ' + p2(now.getHours()) + ':' + p2(now.getMinutes());
+  const L = [];
+  L.push('SCDA CALC');
+  L.push('Approach: ' + ((state.appr || '').trim() || '-'));
+  L.push('Date: ' + stamp);
+  L.push('');
+  L.push('INPUTS');
+  L.push('Threshold elevation: ' + (state.thrElev || '-') + ' ft');
+  L.push('Crossing height at threshold: ' + TCH + ' ft');
+  L.push('MDA: ' + (state.mda ? state.mda + ' ft' : '-'));
+  L.push('Top of descent altitude: ' + (state.tod ? state.tod + ' ft' : '-'));
+  L.push('');
+  L.push('RESULTS');
+  L.push('Descent angle: ' + txt('r-ang'));
+  L.push('Gradient: ' + txt('r-grad'));
+  L.push('Descent ratio: ' + txt('r-ratio'));
+  L.push('MDA crossing: ' + txt('r-mda'));
+  L.push('Top of descent: ' + txt('r-tod'));
+  L.push(txt('r-backlbl') + ': ' + txt('r-back'));
+  L.push('');
+  L.push('FIXES (working outward from the runway)');
+  L.push(pad('Fix', 16) + padL('Altitude ft', 12) + padL('From prev. NM', 15) + padL('Req: ft/NM', 12) + padL('Cross Over Hgt', 16));
+  for (let i = 0; i < n; i++) {
+    const r = state.rows[i], t = trs[i];
+    const out = k => (t.querySelector('[data-out="' + k + '"]') || {}).textContent || '-';
+    L.push(pad((r.n.trim() || 'Fix ' + (i + 1)).slice(0, 15), 16) + padL(r.a || '-', 12) + padL(r.d || '-', 15) + padL(out('need'), 12) + padL(out('path'), 16));
+  }
+  L.push('');
+  L.push('RATE OF DESCENT (ft/min)');
+  document.querySelectorAll('#rates .rate').forEach(e => L.push(pad(e.querySelector('.gs').textContent, 8) + e.querySelector('.fpm').textContent));
+  L.push('');
+  L.push('Cross Over Hgt includes a ' + BUFFER + ' ft buffer. The angle, gradient, rates, MDA crossing and top of descent use the plain fix altitudes.');
+  L.push('Planning aid based on Transport Canada AC 700-028. For operations use the approach chart.');
+  return L.join('\r\n') + '\r\n';
+}
+
+$('exportBtn').addEventListener('click', async () => {
+  const msg = $('exportMsg'), box = $('exportText');
+  msg.textContent = ''; box.hidden = true;
+  const text = buildReport();
+  const base = ((state.appr || '').trim() || 'SCDA').replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'SCDA';
+  const name = base + '.txt';
+  try {
+    // inside Claude the page asks the viewer to save; on its own website it downloads directly
+    const dl = (window.claude && window.claude.use) ? await window.claude.use('downloads') : null;
+    if (dl) {
+      await dl.save({ filename: name, data: text });
+    } else {
+      const blob = new Blob([text], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    }
+    msg.textContent = 'Saved ' + name;
+  } catch (e) {
+    if (e && e.code === 'declined') { msg.textContent = 'Not saved.'; return; }
+    box.value = text; box.hidden = false; box.select();
+    msg.textContent = 'Could not save a file here. Copy the text below.';
+  }
+});
+
+$('emailBtn').addEventListener('click', () => {
+  const msg = $('exportMsg'), box = $('exportText');
+  msg.textContent = ''; box.hidden = true;
+  const text = buildReport();
+  const subj = 'SCDA Calc: ' + ((state.appr || '').trim() || 'Descent profile');
+  const url = 'mailto:?subject=' + encodeURIComponent(subj) + '&body=' + encodeURIComponent(text.replace(/\r\n/g, '\n'));
+  try {
+    const a = document.createElement('a');
+    a.href = url; a.target = '_top';
+    document.body.appendChild(a); a.click(); a.remove();
+    msg.textContent = 'Opening your email app. If nothing opens, copy the text below.';
+  } catch (e) {
+    msg.textContent = 'Could not open email here. Copy the text below.';
+  }
+  box.value = text; box.hidden = false;
+});
+
+$('printBtn').addEventListener('click', () => {
+  try { window.print(); } catch (e) { $('exportMsg').textContent = 'Printing is not available here. Open the tool in your browser and print from there.'; }
+});
+
+const SPEEDS = [];
+[70, 90, 110, 130, 150].forEach(s => SPEEDS.push(s));
+
+function update() {
+  const tag = $('apprTag'); tag.textContent = (state.appr || '').trim(); tag.hidden = !tag.textContent;
+  const set = (tr, k, v, cls) => { const e = tr.querySelector('[data-out="' + k + '"]'); if (e) { e.textContent = v; if (cls !== undefined) e.classList.toggle('neg', cls); } };
+  const thrElev = num(state.thrElev), tch = TCH, tod = num(state.tod);
+  const rows = state.rows.map(r => ({ a: num(r.a), d: num(r.d) }));
+  const res = profile(rows, thrElev, tch, tod, CROSS);
+  const warns = new Set();
+  const n = state.rows.length;
+
+  trs.forEach(tr => { ['need', 'path'].forEach(k => set(tr, k, '—', false)); tr.classList.remove('lim'); });
+  ['r-ang', 'r-grad', 'r-ratio', 'r-mda', 'r-tod', 'r-back'].forEach(id => $(id).textContent = '—');
+  $('r-backlbl').textContent = 'Back from nearest fix';
+  $('rates').innerHTML = '';
+  $('diagram').hidden = true;
+  $('exportBtn').disabled = true; $('emailBtn').disabled = true; $('printBtn').disabled = true;
+
+  if (res && res.bad) {
+    warns.add('Every fix altitude is at or below the threshold elevation plus the crossing height, so there is no descent to calculate.');
+  } else if (res) {
+    $('r-ang').textContent = fmtDec(res.angle, 2) + '°';
+    $('r-grad').innerHTML = fmtInt(res.grad) + ' <small>ft/NM</small>';
+    $('r-ratio').innerHTML = fmtDec(res.grad / 60, 2) + ' <small>× kt = fpm</small>';
+    if (Number.isFinite(res.todDist)) $('r-tod').innerHTML = fmtDist(res.todDist) + ' <small>NM Back</small>';
+    const mda = num(state.mda);
+    if (Number.isFinite(mda)) {
+      if (mda > res.end) $('r-mda').innerHTML = fmtDist((mda - res.end) / res.grad) + ' <small>NM Back</small>';
+      else warns.add('The MDA is at or below the threshold crossing altitude.');
+    }
+    if (Number.isFinite(res.todDist)) {
+      let nb = -1;
+      res.toThr.forEach((d, i) => { if (d <= res.todDist && (nb < 0 || d > res.toThr[nb])) nb = i; });
+      const back = res.todDist - (nb < 0 ? 0 : res.toThr[nb]);
+      res.backNM = back; res.backName = nb < 0 ? 'Threshold' : (state.rows[nb].n.trim() || 'Fix ' + (nb + 1));
+      $('r-backlbl').textContent = 'Back from ' + (nb < 0 ? 'the threshold' : (state.rows[nb].n || 'Fix ' + (nb + 1)));
+      $('r-back').innerHTML = fmtDist(back) + ' <small>NM</small>';
+    }
+    for (let i = 0; i < n; i++) {
+      const t = trs[i];
+      if (Number.isFinite(res.need[i])) set(t, 'need', fmtInt(res.need[i]));
+      // shown figures carry the pilot buffer (not part of the calculation); fixes beyond the top of descent show the top of descent altitude
+      const disp = (Number.isFinite(tod) && res.path[i] === tod) ? tod : res.path[i] + BUFFER;
+      set(t, 'path', fmtInt(disp));
+      if (Number.isFinite(rows[i].a)) {
+        if (Math.round(res.path[i] - rows[i].a) < 0) warns.add((state.rows[i].n || 'Fix ' + (i + 1)) + ': the path is ' + fmtInt(rows[i].a - res.path[i]) + ' ft below the fix altitude. Check the altitude, the distance and the top of descent altitude.');
+      }
+    }
+    $('exportBtn').disabled = false; $('emailBtn').disabled = false; $('printBtn').disabled = false;
+    drawDiagram(res, rows, state.rows.map((q, i) => q.n.trim() || 'Fix ' + (i + 1)), thrElev, num(state.mda), tod, res.path.map(p => (Number.isFinite(tod) && p === tod) ? tod : p + BUFFER));
+    $('rates').innerHTML = SPEEDS.map(s => '<div class="rate"><span class="gs">' + s + ' kt</span><span class="fpm">' + fmtInt(rateFpm(res.grad, s)) + '</span></div>').join('');
+    if (Number.isFinite(tod) && tod <= res.end) warns.add('The top of descent altitude is at or below the threshold crossing altitude.');
+  }
+
+  const w = $('warn'); w.innerHTML = '';
+  warns.forEach(t => { const p = document.createElement('p'); p.textContent = t; w.appendChild(p); });
+}
+
+['appr', 'thrElev', 'mda', 'tod'].forEach(k => {
+  const el = $(k); el.value = state[k];
+  el.addEventListener('input', () => { state[k] = el.value; save(); update(); });
+});
+$('addRow').addEventListener('click', () => { state.rows.push({ n: '', a: '', d: '' }); save(); buildRows(); update(); });
+buildRows(); update();
+</script>
+<script>
+if ('serviceWorker' in navigator) { window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); }); }
+</script>
+</body>
+</html>

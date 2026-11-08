@@ -36,42 +36,42 @@
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --paper: #1A0F0D;
-      --surface: #2A1A17;
-      --field: #1E1210;
-      --ink: #F7E5E0;
-      --muted: #C4A39B;
-      --rule: #4D2F2A;
-      --accent: #F2765F;
-      --accent-bg: #412320;
-      --accent-ink: #1E1210;
+      --paper: #26292D;
+      --surface: #31353A;
+      --field: #282B2F;
+      --ink: #EEF0F2;
+      --muted: #B0B5BB;
+      --rule: #4A4F55;
+      --accent: #B79CF0;
+      --accent-bg: #2D2640;
+      --accent-ink: #1E2023;
       --warn: #FF8F7D;
-      --warn-bg: #3A211B;
+      --warn-bg: #3A2D2A;
       --crit: #FF8F7D;
       --label: #F29A4B;
-      --terrain: #3A231F;
-      --terrain-line: #9C5046;
-      --block: #5A5048;
+      --terrain: #3B4045;
+      --terrain-line: #7C838A;
+      --block: #6A7077;
       color-scheme: dark;
     }
   }
   :root[data-theme="dark"] {
-    --paper: #1A0F0D;
-    --surface: #2A1A17;
-    --field: #1E1210;
-    --ink: #F7E5E0;
-    --muted: #C4A39B;
-    --rule: #4D2F2A;
-    --accent: #F2765F;
-    --accent-bg: #412320;
-    --accent-ink: #1E1210;
+    --paper: #26292D;
+    --surface: #31353A;
+    --field: #282B2F;
+    --ink: #EEF0F2;
+    --muted: #B0B5BB;
+    --rule: #4A4F55;
+    --accent: #B79CF0;
+    --accent-bg: #2D2640;
+    --accent-ink: #1E2023;
     --warn: #FF8F7D;
-    --warn-bg: #3A211B;
+    --warn-bg: #3A2D2A;
     --crit: #FF8F7D;
     --label: #F29A4B;
-    --terrain: #3A231F;
-    --terrain-line: #9C5046;
-    --block: #5A5048;
+    --terrain: #3B4045;
+    --terrain-line: #7C838A;
+    --block: #6A7077;
     color-scheme: dark;
   }
 
@@ -88,7 +88,7 @@
   }
   .wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: 20px; }
 
-  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
   .theme-btn { font: inherit; font-size: 14px; font-weight: 600; padding: 8px 14px; border: 1px solid var(--accent); border-radius: 4px; background: transparent; color: var(--accent); cursor: pointer; min-height: 40px; white-space: nowrap; }
   .theme-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
   .eyebrow {
@@ -168,6 +168,14 @@
   .pill.on { background: var(--accent-bg); color: var(--accent); border-color: transparent; }
   .pill.on::before { background: var(--accent); }
   .pill.off { background: var(--field); color: var(--ink); }
+  #offlineStatus.on { background: #1D3349; color: #9FD2FF; border-color: #2F4F6E; }
+  #offlineStatus.on::before { background: #9FD2FF; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) #offlineStatus.on { background: #2D2640; color: #C7B0FF; border-color: #4A3F6B; }
+    :root:not([data-theme="light"]) #offlineStatus.on::before { background: #C7B0FF; }
+  }
+  :root[data-theme="dark"] #offlineStatus.on { background: #2D2640; color: #C7B0FF; border-color: #4A3F6B; }
+  :root[data-theme="dark"] #offlineStatus.on::before { background: #C7B0FF; }
 
   .tablewrap { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; min-width: 680px; }
@@ -264,7 +272,12 @@
   .readout.four dt { min-height: 2.4em; }
   .readout.four .to::after { content: "→"; position: absolute; right: -20px; bottom: 0; transform: translateX(50%); font-family: var(--f-data); font-size: 26px; font-weight: 700; line-height: 32px; color: var(--accent); }
   @media (max-width: 640px) { .readout.four { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-  @media (max-width: 640px) { #rows tr { border-bottom: 3px solid var(--ink); padding: 16px 0; } }
+  @media (max-width: 640px) { #rows tr, #startRow tr { border-bottom: 3px solid var(--ink); padding: 16px 0; } }
+  .start-nm { font-weight: 600; font-size: 17px; padding: 0 8px; }
+  .start-note { white-space: normal; font-size: 12px; }
+  .tablewrap #startRow td { padding: 8px 4px; }
+  .tablewrap #startRow td.num > span { padding-right: 9px; }
+  #startRow .del-cell { text-align: center; }
   .tablewrap .del { width: auto; max-width: 150px; height: 36px; padding: 0 14px; border: 1px solid var(--rule); border-radius: 999px; background: var(--field); color: var(--ink); font-family: var(--f-body); font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .tablewrap .del:hover { color: var(--crit); border-color: var(--crit); }
   .tablewrap .del:disabled { opacity: .4; cursor: default; }
@@ -275,6 +288,7 @@
   .diagram .t-name { font-family: var(--f-body); font-weight: 600; font-size: 15px; }
   .diagram .t-axis { fill: var(--muted); font-size: 13px; }
   .diagram .t-cross { fill: var(--crit); font-weight: 700; font-size: 16px; }
+  .diagram .t-title { fill: var(--ink); font-weight: 700; font-size: 18px; letter-spacing: .06em; }
   .diagram .t-ang { font-weight: 700; font-size: 18px; }
   .diagram .t-dim { fill: var(--muted); font-size: 14px; }
   .diagram .ground { fill: var(--terrain); stroke: none; }
@@ -304,7 +318,7 @@
     :root, :root:not([data-theme="light"]), :root[data-theme="dark"], :root[data-theme="light"] { color-scheme: light; --paper:#fff; --surface:#fff; --field:#fff; --ink:#000; --muted:#444; --rule:#999; --line:#000; --accent:#000; --accent-bg:#e6e6e6; --crit:#000; --warn:#000; --label:#333; --terrain:#ddd; --terrain-line:#777; --block:#999; }
     html { filter: grayscale(1); }
     body { background: #fff !important; color: #000; }
-    .theme-btn, .export, .export-text, .add, .del, details, #apprTag { display: none !important; }
+    .theme-btn, .export, .export-text, .add, .del, details, #apprTag, #offlineStatus { display: none !important; }
     .panel, section { box-shadow: none !important; break-inside: avoid; }
     input { border-color: #999 !important; background: #fff !important; }
   }
@@ -316,6 +330,7 @@
   <header>
     <h1>SCDA Calc</h1>
     <button type="button" class="theme-btn" id="themeBtn" aria-label="Switch between dark and light theme">Light</button>
+    <div style="flex-basis:100%"><span class="pill" id="offlineStatus">Checking offline storage…</span></div>
   </header>
 
   <div class="grid">
@@ -369,12 +384,20 @@
             <tr>
               <th>Fix</th>
               <th class="num">Altitude ft</th>
-              <th class="num">From prev. NM</th>
+              <th class="num">From Prev Fix</th>
               <th class="num">Req: ft/NM</th>
               <th class="num">Cross Over Hgt</th>
               <th></th>
             </tr>
           </thead>
+          <tbody id="startRow"><tr>
+            <td class="name-cell" data-label="Fix"><span class="start-nm">TDZ</span></td>
+            <td class="num" data-label="Altitude ft"><span class="path" id="startAlt">—</span></td>
+            <td class="num" data-label="From Prev Fix"><span class="sub">0.0</span></td>
+            <td class="num" data-label="Req: ft/NM"><span class="sub">—</span></td>
+            <td class="num" data-label="Cross Over Hgt"><span class="sub">—</span></td>
+            <td class="del-cell"><span class="sub start-note">Elev. + 50 ft</span></td>
+          </tr></tbody>
           <tbody id="rows"></tbody>
         </table>
       </div>
@@ -413,11 +436,13 @@ const MINUS = '−';
 const TCH = 50;   // threshold crossing height, ft (AC 700-028)
 const BUFFER = 100;   // pilot buffer shown on the path figures, ft (not used in the calculation)
 const CROSS = 0;   // extra height the path must have over each fix altitude, ft (none)
-let state = { appr: '', thrElev: '', mda: '', tod: '', rows: [{ n: '', a: '', d: '' }, { n: '', a: '', d: '' }] };
+let state = { appr: '', thrElev: '', mda: '', tod: '', rows: [{ n: '', a: '', d: '' }, { n: '', a: '', d: '' }, { n: '', a: '', d: '' }] };
 try {
   const s = JSON.parse(localStorage.getItem(KEY));
   if (s && Array.isArray(s.rows) && s.rows.length) state = Object.assign(state, s);
 } catch (e) {}
+const MIN_ROWS = 3;   // at start-up show at least this many fix rows
+while (state.rows.length < MIN_ROWS) state.rows.push({ n: '', a: '', d: '' });
 function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
 
 const $ = id => document.getElementById(id);
@@ -436,6 +461,7 @@ const fmtSigned = n => n > 0 ? '+' + fmtInt(n) : fmtInt(n);
 // ---- calc:start
 // rows: [{a, d}] working outward from the runway (d = NM from the row above; the first row is measured from the threshold).
 // thrElev, tch in ft; tod = top of descent altitude (NaN if none).
+const isBlankRow = r => Number.isNaN(r.a) && Number.isNaN(r.d);
 function profile(rows, thrElev, tch, tod, cross) {
   cross = cross || 0;
   const n = rows.length;
@@ -443,6 +469,7 @@ function profile(rows, thrElev, tch, tod, cross) {
   const toThr = new Array(n);
   let acc = 0;
   for (let i = 0; i < n; i++) {
+    if (Number.isNaN(rows[i].a) && Number.isNaN(rows[i].d)) { toThr[i] = acc; continue; }   // an empty row is ignored
     if (!Number.isFinite(rows[i].d) || rows[i].d < 0) return null;
     acc += rows[i].d;
     toThr[i] = acc;
@@ -485,7 +512,7 @@ function buildRows() {
     tr.innerHTML =
       '<td class="name-cell" data-label="Fix"><input class="cell-in name" data-f="n" autocomplete="off" placeholder="Fix" aria-label="Fix name"></td>' +
       '<td class="num" data-label="Altitude ft"><input class="cell-in alt" data-f="a" inputmode="decimal" autocomplete="off" placeholder="0" aria-label="Altitude at the fix, feet"></td>' +
-      '<td class="num" data-label="From prev. NM"><input class="cell-in alt" data-f="d" inputmode="decimal" autocomplete="off" placeholder="0.0" aria-label="Distance from the previous fix, nautical miles; the first fix is measured from the runway threshold"></td>' +
+      '<td class="num" data-label="From Prev Fix"><input class="cell-in alt" data-f="d" inputmode="decimal" autocomplete="off" placeholder="0.0" aria-label="Distance from the previous fix, nautical miles; the first fix is measured from the runway threshold"></td>' +
       '<td class="num" data-label="Req: ft/NM"><span class="sub" data-out="need">—</span></td>' +
       '<td class="num" data-label="Cross Over Hgt"><span class="path" data-out="path">—</span></td>' +
       '<td class="del-cell"><button type="button" class="del"' + (state.rows.length <= 1 ? ' disabled' : '') + '></button></td>';
@@ -566,6 +593,9 @@ function drawDiagram(res, rows, names, thrElev, mda, tod, disp) {
     s += '<text class="t-mda" x="' + (x + 10) + '" y="' + (y - 36) + '" text-anchor="end">TOD ' + f0(tod) + '</text>';
     s += '<text class="t-mda" x="' + (x + 10) + '" y="' + (y - 20) + '" text-anchor="end">' + (Number.isFinite(res.backNM) ? fmtDist(res.backNM) + ' NM Back' : fmtDec(res.todDist, 1) + ' NM Back') + '</text>';
   }
+  // chart title: the approach name
+  const ttl = (state.appr || '').trim().slice(0, 40).replace(/[<>&]/g, '');
+  if (ttl) s += '<text class="t-title" x="' + (W / 2) + '" y="22" text-anchor="middle">' + ttl + '</text>';
   // angle label, top left of the diagram
   s += '<text class="t-axis" x="' + (L + 8) + '" y="18">DESCENT ANGLE</text>';
   s += '<text class="t-ang" x="' + (L + 8) + '" y="38">' + fmtDec(res.angle, 2) + '°</text>';
@@ -573,6 +603,7 @@ function drawDiagram(res, rows, names, thrElev, mda, tod, disp) {
   const pts = [0].concat(res.toThr);
   const dy = T + ph + 46;
   for (let i = 1; i < pts.length; i++) {
+    if (isBlankRow(rows[i - 1])) continue;   // empty rows have no distance to show
     const x1 = X(pts[i - 1]), x2 = X(pts[i]);
     s += '<line class="dim" x1="' + x1 + '" x2="' + x2 + '" y1="' + dy + '" y2="' + dy + '"/>';
     s += '<line class="dim" x1="' + x1 + '" x2="' + x1 + '" y1="' + (dy - 5) + '" y2="' + (dy + 5) + '"/><line class="dim" x1="' + x2 + '" x2="' + x2 + '" y1="' + (dy - 5) + '" y2="' + (dy + 5) + '"/>';
@@ -585,6 +616,7 @@ function drawDiagram(res, rows, names, thrElev, mda, tod, disp) {
 
 // ---- export: a plain text report of what is on the screen
 function buildReport() {
+  const thrElev0 = num(state.thrElev);
   const n = state.rows.length;
   const txt = id => $(id).textContent.replace(/\s+/g, ' ').trim();
   const pad = (s, w) => String(s).padEnd(w);
@@ -611,10 +643,13 @@ function buildReport() {
   L.push('Top of descent: ' + txt('r-tod'));
   L.push(txt('r-backlbl') + ': ' + txt('r-back'));
   L.push('');
+  L.push('TDZ (threshold + ' + TCH + ' ft): ' + (Number.isFinite(thrElev0) ? fmtInt(thrElev0 + TCH) + ' ft' : '-'));
+  L.push('');
   L.push('FIXES (working outward from the runway)');
-  L.push(pad('Fix', 16) + padL('Altitude ft', 12) + padL('From prev. NM', 15) + padL('Req: ft/NM', 12) + padL('Cross Over Hgt', 16));
+  L.push(pad('Fix', 16) + padL('Altitude ft', 12) + padL('From Prev Fix', 15) + padL('Req: ft/NM', 12) + padL('Cross Over Hgt', 16));
   for (let i = 0; i < n; i++) {
     const r = state.rows[i], t = trs[i];
+    if (!r.a.trim() && !r.d.trim()) continue;
     const out = k => (t.querySelector('[data-out="' + k + '"]') || {}).textContent || '-';
     L.push(pad((r.n.trim() || 'Fix ' + (i + 1)).slice(0, 15), 16) + padL(r.a || '-', 12) + padL(r.d || '-', 15) + padL(out('need'), 12) + padL(out('path'), 16));
   }
@@ -702,6 +737,7 @@ function update() {
   const res = profile(rows, thrElev, tch, tod, CROSS);
   const warns = new Set();
   const n = state.rows.length;
+  $('startAlt').textContent = Number.isFinite(thrElev) ? fmtInt(thrElev + tch) : '—';
 
   trs.forEach(tr => { ['need', 'path'].forEach(k => set(tr, k, '—', false)); tr.classList.remove('lim'); });
   ['r-ang', 'r-grad', 'r-ratio', 'r-mda', 'r-tod', 'r-back'].forEach(id => $(id).textContent = '—');
@@ -724,7 +760,7 @@ function update() {
     }
     if (Number.isFinite(res.todDist)) {
       let nb = -1;
-      res.toThr.forEach((d, i) => { if (d <= res.todDist && (nb < 0 || d > res.toThr[nb])) nb = i; });
+      res.toThr.forEach((d, i) => { if (isBlankRow(rows[i])) return; if (d <= res.todDist && (nb < 0 || d > res.toThr[nb])) nb = i; });
       const back = res.todDist - (nb < 0 ? 0 : res.toThr[nb]);
       res.backNM = back; res.backName = nb < 0 ? 'Threshold' : (state.rows[nb].n.trim() || 'Fix ' + (nb + 1));
       $('r-backlbl').textContent = 'Back from ' + (nb < 0 ? 'the threshold' : (state.rows[nb].n || 'Fix ' + (nb + 1)));
@@ -732,6 +768,7 @@ function update() {
     }
     for (let i = 0; i < n; i++) {
       const t = trs[i];
+      if (isBlankRow(rows[i])) continue;
       if (Number.isFinite(res.need[i])) set(t, 'need', fmtInt(res.need[i]));
       // shown figures carry the pilot buffer (not part of the calculation); fixes beyond the top of descent show the top of descent altitude
       const disp = (Number.isFinite(tod) && res.path[i] === tod) ? tod : res.path[i] + BUFFER;
@@ -758,7 +795,26 @@ $('addRow').addEventListener('click', () => { state.rows.push({ n: '', a: '', d:
 buildRows(); update();
 </script>
 <script>
-if ('serviceWorker' in navigator) { window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); }); }
+(function () {
+  var el = document.getElementById('offlineStatus');
+  var CACHE = 'scda-v3', NEED = 6, done = false;
+  function set(cls, txt) { el.className = 'pill ' + cls; el.textContent = txt; }
+  function fail(txt) { if (!done) set('off', txt); }
+  if (!('serviceWorker' in navigator)) { set('off', 'This view cannot save the app. Open the site in Safari and add it from there.'); return; }
+  if (location.protocol !== 'https:' && location.hostname !== 'localhost') { set('off', 'Offline storage needs a secure (https) address.'); return; }
+  function check(tries) {
+    caches.open(CACHE).then(function (c) { return c.keys(); }).then(function (keys) {
+      if (keys.length >= NEED) { done = true; set('on', 'Ready for offline use'); }
+      else if (tries > 0) { setTimeout(function () { check(tries - 1); }, 1000); }
+      else { fail('Not saved yet (' + keys.length + ' of ' + NEED + ' files). Reopen the app while online.'); }
+    }).catch(function () { fail('Offline storage is blocked on this iPad.'); });
+  }
+  setTimeout(function () { fail('Not saved yet. Keep the connection on and reopen the app.'); }, 12000);
+  navigator.serviceWorker.register('sw.js')
+    .then(function () { return navigator.serviceWorker.ready; })
+    .then(function () { check(8); })
+    .catch(function (err) { fail('Offline storage failed: ' + (err && err.name ? err.name : 'error')); });
+})();
 </script>
 </body>
 </html>

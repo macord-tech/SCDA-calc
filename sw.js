@@ -1,6 +1,6 @@
 // Saves the app so it opens with no connection.
 // When online it always fetches the newest files first; the saved copy is used only when there is no connection.
-const CACHE = 'scda-v2';
+const CACHE = 'scda-v3';
 const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', function (e) {
